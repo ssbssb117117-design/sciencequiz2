@@ -1,1 +1,1685 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>감수분열 SPEED QUIZ</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #eaf2ff, #f7f9fc);
+    color: #222;
+}
+
+.container {
+    max-width: 720px;
+    margin: 30px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 25px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+h1 {
+    text-align: center;
+}
+
+.subtitle {
+    text-align: center;
+    color: #777;
+    margin-bottom: 30px;
+}
+
+#startScreen {
+    text-align: center;
+}
+
+#nickname {
+    width: 80%;
+    max-width: 350px;
+    padding: 14px;
+    font-size: 18px;
+    border: 2px solid #4267b2;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+button {
+    border: none;
+    border-radius: 12px;
+    padding: 13px 20px;
+    margin: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #4267b2;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+#gameScreen,
+#resultScreen {
+    display: none;
+}
+
+.topInfo {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.infoBox {
+    background: #f0f4fa;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.timer {
+    text-align: center;
+    font-size: 25px;
+    font-weight: bold;
+    margin: 20px 0 5px;
+}
+
+.score {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.streak {
+    text-align: center;
+    color: #e67e22;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.phase {
+    color: #4267b2;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.question {
+    font-size: 21px;
+    line-height: 2.2;
+    min-height: 130px;
+    margin-bottom: 20px;
+}
+
+.answer {
+    width: 150px;
+    padding: 7px;
+    font-size: 18px;
+    text-align: center;
+    border: none;
+    border-bottom: 3px solid #4267b2;
+    outline: none;
+}
+
+.progress {
+    width: 100%;
+    height: 10px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progressBar {
+    height: 100%;
+    width: 0%;
+    background: #4267b2;
+    transition: width 0.3s;
+}
+
+.resultMessage {
+    text-align: center;
+    font-size: 19px;
+    font-weight: bold;
+    min-height: 30px;
+    margin-top: 10px;
+}
+
+.finalScore {
+    text-align: center;
+    font-size: 40px;
+    font-weight: bold;
+    margin: 20px;
+}
+
+.finalInfo {
+    text-align: center;
+    font-size: 18px;
+    line-height: 2;
+}
+
+.top15 {
+    margin-top: 30px;
+}
+
+.top15 h2,
+.answerReview h2 {
+    text-align: center;
+}
+
+.rank {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    margin: 6px 0;
+    background: #f2f5fa;
+    border-radius: 10px;
+}
+
+.myRank {
+    background: #fff0c2;
+    font-weight: bold;
+}
+
+.loading {
+    text-align: center;
+    color: #777;
+}
+
+.error {
+    color: #d63031;
+    text-align: center;
+    margin: 15px 0;
+}
+
+.answerReview {
+    margin-top: 35px;
+}
+
+.reviewItem {
+    background: #f5f7fa;
+    border-radius: 14px;
+    padding: 15px;
+    margin: 12px 0;
+    line-height: 1.7;
+}
+
+.reviewCorrect {
+    border-left: 6px solid #2ecc71;
+}
+
+.reviewWrong {
+    border-left: 6px solid #e74c3c;
+}
+
+.correctText {
+    color: #168a45;
+    font-weight: bold;
+}
+
+.wrongText {
+    color: #d63031;
+    font-weight: bold;
+}
+
+.answerLabel {
+    font-weight: bold;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+<!-- ================= 시작 화면 ================= -->
+
+<div id="startScreen">
+
+    <h1>🧬 감수분열 SPEED QUIZ</h1>
+
+    <div class="subtitle">
+        빠르고 정확하게 감수분열을 완성하라!
+    </div>
+
+    <p>닉네임을 입력하세요</p>
+
+    <input
+        id="nickname"
+        type="text"
+        maxlength="12"
+        placeholder="닉네임"
+        autocomplete="off"
+    >
+
+    <br>
+
+    <button onclick="startGame()">
+        🚀 게임 시작
+    </button>
+
+    <div id="startError" class="error"></div>
+
+</div>
+
+
+<!-- ================= 게임 화면 ================= -->
+
+<div id="gameScreen">
+
+    <div class="topInfo">
+
+        <div class="infoBox">
+            👤 <span id="playerName"></span>
+        </div>
+
+        <div class="infoBox">
+            문제 <span id="questionNumber">1</span> / 10
+        </div>
+
+    </div>
+
+
+    <div class="progress">
+
+        <div
+            class="progressBar"
+            id="progressBar">
+        </div>
+
+    </div>
+
+
+    <div class="timer">
+
+        ⏱️
+        <span id="timer">0.00</span>
+        초
+
+    </div>
+
+
+    <div class="score">
+
+        🏆 현재 점수:
+        <span id="currentScore">0</span>
+
+    </div>
+
+
+    <div class="streak">
+
+        🔥 연속 정답:
+        <span id="streak">0</span>
+
+    </div>
+
+
+    <div
+        class="phase"
+        id="phase">
+    </div>
+
+
+    <div
+        class="question"
+        id="question">
+    </div>
+
+
+    <div style="text-align:center">
+
+        <button onclick="submitAnswer()">
+            ✅ 정답 제출
+        </button>
+
+    </div>
+
+
+    <div
+        class="resultMessage"
+        id="resultMessage">
+    </div>
+
+</div>
+
+
+<!-- ================= 결과 화면 ================= -->
+
+<div id="resultScreen">
+
+    <h1>🎉 GAME CLEAR!</h1>
+
+
+    <p style="text-align:center;">
+
+        <strong id="finalName"></strong>
+        님의 결과
+
+    </p>
+
+
+    <div class="finalScore">
+
+        🏆
+        <span id="finalScore">0</span>
+        점
+
+    </div>
+
+
+    <div class="finalInfo">
+
+        ✅ 정답:
+        <span id="correctCount">0</span> / 10
+
+        <br>
+
+        ⏱️ 총 풀이 시간:
+        <span id="totalTime">0</span>초
+
+        <br>
+
+        🔥 최고 연속 정답:
+        <span id="bestStreak">0</span>
+
+    </div>
+
+
+    <!-- TOP 15 -->
+
+    <div class="top15">
+
+        <h2>🌎 전체 TOP 15</h2>
+
+        <div id="rankingList">
+
+            <div class="loading">
+                기록을 불러오는 중...
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- 문제별 결과 -->
+
+    <div class="answerReview">
+
+        <h2>📝 문제별 결과</h2>
+
+        <div id="reviewList"></div>
+
+    </div>
+
+
+    <div style="text-align:center;margin-top:25px;">
+
+        <button onclick="location.reload()">
+            🔄 다시 하기
+        </button>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+     FIREBASE
+===================================================== -->
+
+<script type="module">
+
+
+import { initializeApp }
+
+from
+"https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+
+
+import {
+
+    getFirestore,
+    collection,
+    addDoc,
+    query,
+    orderBy,
+    limit,
+    getDocs
+
+}
+
+from
+"https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+
+/* =====================================================
+   Firebase 설정
+===================================================== */
+
+const firebaseConfig = {
+
+    apiKey:
+        "AIzaSyCe5NTMsMC6nAA2LJc_XiGwMT6vsVaAxUk",
+
+    authDomain:
+        "ssb117-eb0c1.firebaseapp.com",
+
+    projectId:
+        "ssb117-eb0c1",
+
+    storageBucket:
+        "ssb117-eb0c1.firebasestorage.app",
+
+    messagingSenderId:
+        "872109001831",
+
+    appId:
+        "1:872109001831:web:ecf760e2cb7a860c2b98c2",
+
+    measurementId:
+        "G-115T5T0QD8"
+
+};
+
+
+const app =
+    initializeApp(firebaseConfig);
+
+
+const db =
+    getFirestore(app);
+
+
+/* =====================================================
+   문제
+===================================================== */
+
+const questions = [
+
+{
+    phase: "1분열 전",
+
+    text:
+        "DNA가 복제된다.",
+
+    blanks:
+        ["DNA"]
+},
+
+{
+    phase: "2 전기",
+
+    text:
+        "핵막이 사라지고, 상동 염색체가 결합하여 나타난다.",
+
+    blanks:
+        ["핵막", "상동 염색체"]
+},
+
+{
+    phase: "3 중기",
+
+    text:
+        "결합한 상동염색체가 세포 가운데에 배열한다.",
+
+    blanks:
+        ["결합한 상동염색체", "세포 가운데"]
+},
+
+{
+    phase: "4 후기",
+
+    text:
+        "상동 염색체가 분리되고, 각 염색체가 세포 양쪽 끝으로 이동한다.",
+
+    blanks:
+        ["상동 염색체", "염색체", "세포 양쪽 끝"]
+},
+
+{
+    phase: "5 말기",
+
+    text:
+        "핵막이 나타나고, 세포질이 나누어진다.",
+
+    blanks:
+        ["핵막", "세포질"]
+},
+
+{
+    phase: "6 2분열 전기",
+
+    text:
+        "각 세포에 두 개의 염색 분체로 이루어진 염색체가 있고, 핵막이 사라진다.",
+
+    blanks:
+        [
+            "각 세포",
+            "두 개의 염색 분체",
+            "염색체",
+            "핵막"
+        ]
+},
+
+{
+    phase: "7 2분열 중기",
+
+    text:
+        "염색체가 세포 가운데에 배열한다.",
+
+    blanks:
+        ["염색체", "세포 가운데"]
+},
+
+{
+    phase: "8 2분열 후기",
+
+    text:
+        "각 염색체의 염색 분체가 분리되어 세포 양쪽 끝으로 이동한다.",
+
+    blanks:
+        [
+            "각 염색체",
+            "염색 분체",
+            "세포 양쪽 끝"
+        ]
+},
+
+{
+    phase: "9 말기 및 세포질 분열",
+
+    text:
+        "세포질이 나누어지고, 딸세포 네 개가 만들어진다.",
+
+    blanks:
+        ["세포질", "딸세포 네 개"]
+},
+
+{
+    phase: "10 생식세포 형성",
+
+    text:
+        "딸세포는 정자 또는 난자가 된다.",
+
+    blanks:
+        ["딸세포", "정자", "난자"]
+}
+
+];
+
+
+/* =====================================================
+   게임 변수
+===================================================== */
+
+let playerName = "";
+
+let gameQuestions = [];
+
+let currentQuestion = 0;
+
+let score = 0;
+
+let streak = 0;
+
+let bestStreak = 0;
+
+let correctCount = 0;
+
+let totalTime = 0;
+
+let questionStartTime = 0;
+
+let timerInterval = null;
+
+let submitting = false;
+
+
+/*
+   문제별 기록
+
+   여기에는 마지막에 보여줄
+   내 답 / 정답 / 시간 / 점수를 저장한다.
+*/
+
+let answerHistory = [];
+
+
+/* =====================================================
+   게임 시작
+===================================================== */
+
+window.startGame = function() {
+
+
+    playerName =
+        document
+        .getElementById("nickname")
+        .value
+        .trim();
+
+
+    if(playerName === "") {
+
+        document
+        .getElementById("startError")
+        .innerText =
+            "닉네임을 입력해주세요.";
+
+        return;
+
+    }
+
+
+    /*
+       문제 순서를 랜덤으로 섞음
+    */
+
+    gameQuestions =
+        [...questions]
+        .sort(
+            () => Math.random() - 0.5
+        );
+
+
+    currentQuestion = 0;
+
+    score = 0;
+
+    streak = 0;
+
+    bestStreak = 0;
+
+    correctCount = 0;
+
+    totalTime = 0;
+
+    answerHistory = [];
+
+
+    document
+    .getElementById("startScreen")
+    .style.display = "none";
+
+
+    document
+    .getElementById("gameScreen")
+    .style.display = "block";
+
+
+    document
+    .getElementById("playerName")
+    .innerText =
+        playerName;
+
+
+    showQuestion();
+
+};
+
+
+/* =====================================================
+   문제 표시
+===================================================== */
+
+function showQuestion() {
+
+
+    submitting = false;
+
+
+    const q =
+        gameQuestions[currentQuestion];
+
+
+    document
+    .getElementById("questionNumber")
+    .innerText =
+        currentQuestion + 1;
+
+
+    document
+    .getElementById("phase")
+    .innerText =
+        q.phase;
+
+
+    let text =
+        q.text;
+
+
+    /*
+       빈칸을 input으로 변환
+    */
+
+    q.blanks.forEach(
+        function(answer) {
+
+            text =
+                text.replace(
+
+                    answer,
+
+                    `<input
+                        class="answer"
+                        type="text"
+                        data-answer="${answer}"
+                        autocomplete="off"
+                    >`
+
+                );
+
+        }
+    );
+
+
+    document
+    .getElementById("question")
+    .innerHTML =
+        text;
+
+
+    document
+    .getElementById("resultMessage")
+    .innerText =
+        "";
+
+
+    document
+    .getElementById("progressBar")
+    .style.width =
+        (currentQuestion / 10 * 100)
+        + "%";
+
+
+    questionStartTime =
+        performance.now();
+
+
+    startTimer();
+
+
+    const firstInput =
+        document.querySelector(
+            ".answer"
+        );
+
+
+    if(firstInput) {
+
+        firstInput.focus();
+
+    }
+
+}
+
+
+/* =====================================================
+   타이머
+===================================================== */
+
+function startTimer() {
+
+
+    clearInterval(
+        timerInterval
+    );
+
+
+    timerInterval =
+        setInterval(
+
+            function() {
+
+
+                const elapsed =
+
+                    (
+                        performance.now()
+                        -
+                        questionStartTime
+                    )
+                    / 1000;
+
+
+                document
+                .getElementById("timer")
+                .innerText =
+                    elapsed.toFixed(2);
+
+
+            },
+
+            10
+
+        );
+
+}
+
+
+/* =====================================================
+   정답 제출
+===================================================== */
+
+window.submitAnswer = function() {
+
+
+    if(submitting) {
+
+        return;
+
+    }
+
+
+    submitting = true;
+
+
+    clearInterval(
+        timerInterval
+    );
+
+
+    const elapsed =
+
+        (
+            performance.now()
+            -
+            questionStartTime
+        )
+        / 1000;
+
+
+    totalTime += elapsed;
+
+
+    const inputs =
+        document.querySelectorAll(
+            ".answer"
+        );
+
+
+    let correct = true;
+
+
+    /*
+       사용자의 답을 배열로 저장
+    */
+
+    const userAnswers = [];
+
+
+    inputs.forEach(
+
+        function(input) {
+
+
+            const userAnswer =
+                input.value.trim();
+
+
+            const correctAnswer =
+                input.dataset.answer;
+
+
+            userAnswers.push(
+                userAnswer
+            );
+
+
+            if(
+                normalize(userAnswer)
+                !==
+                normalize(correctAnswer)
+            ) {
+
+                correct = false;
+
+            }
+
+        }
+
+    );
+
+
+    let earnedScore = 0;
+
+
+    /* ============================
+       정답
+    ============================ */
+
+    if(correct) {
+
+
+        correctCount++;
+
+        streak++;
+
+
+        if(
+            streak > bestStreak
+        ) {
+
+            bestStreak =
+                streak;
+
+        }
+
+
+        let baseScore;
+
+        let bonusRate;
+
+
+        if(elapsed <= 2) {
+
+            baseScore = 1000;
+
+            bonusRate = 0.25;
+
+        }
+
+        else if(elapsed <= 5) {
+
+            baseScore = 500;
+
+            bonusRate = 0.15;
+
+        }
+
+        else if(elapsed <= 10) {
+
+            baseScore = 300;
+
+            bonusRate = 0.05;
+
+        }
+
+        else {
+
+            baseScore = 100;
+
+            bonusRate = 0.03;
+
+        }
+
+
+        earnedScore =
+
+            Math.round(
+
+                baseScore *
+
+                Math.pow(
+                    1 + bonusRate,
+                    streak - 1
+                )
+
+            );
+
+
+        score +=
+            earnedScore;
+
+
+        document
+        .getElementById("resultMessage")
+        .innerText =
+            "✅ 정답! +" +
+            earnedScore.toLocaleString() +
+            "점";
+
+
+    }
+
+    /* ============================
+       오답
+    ============================ */
+
+    else {
+
+
+        streak = 0;
+
+
+        earnedScore = 0;
+
+
+        document
+        .getElementById("resultMessage")
+        .innerText =
+            "❌ 오답! +0점";
+
+
+    }
+
+
+    /*
+       문제 기록 저장
+    */
+
+    answerHistory.push({
+
+        number:
+            currentQuestion + 1,
+
+        phase:
+            gameQuestions[currentQuestion]
+            .phase,
+
+        userAnswers:
+            userAnswers,
+
+        correctAnswers:
+            gameQuestions[currentQuestion]
+            .blanks,
+
+        correct:
+            correct,
+
+        time:
+            Number(
+                elapsed.toFixed(2)
+            ),
+
+        earnedScore:
+            earnedScore
+
+    });
+
+
+    /*
+       화면의 실시간 점수 업데이트
+    */
+
+    document
+    .getElementById("currentScore")
+    .innerText =
+        score.toLocaleString();
+
+
+    document
+    .getElementById("streak")
+    .innerText =
+        streak;
+
+
+    /*
+       0.6초 후 다음 문제
+    */
+
+    setTimeout(
+
+        function() {
+
+
+            currentQuestion++;
+
+
+            if(
+                currentQuestion >= 10
+            ) {
+
+                finishGame();
+
+            }
+
+            else {
+
+                showQuestion();
+
+            }
+
+
+        },
+
+        600
+
+    );
+
+};
+
+
+/* =====================================================
+   답안 비교
+===================================================== */
+
+function normalize(text) {
+
+    return text
+        .trim()
+        .replace(/\s+/g, "");
+
+}
+
+
+/* =====================================================
+   게임 종료
+===================================================== */
+
+async function finishGame() {
+
+
+    clearInterval(
+        timerInterval
+    );
+
+
+    document
+    .getElementById("gameScreen")
+    .style.display =
+        "none";
+
+
+    document
+    .getElementById("resultScreen")
+    .style.display =
+        "block";
+
+
+    document
+    .getElementById("finalName")
+    .innerText =
+        playerName;
+
+
+    document
+    .getElementById("finalScore")
+    .innerText =
+        score.toLocaleString();
+
+
+    document
+    .getElementById("correctCount")
+    .innerText =
+        correctCount;
+
+
+    document
+    .getElementById("totalTime")
+    .innerText =
+        totalTime.toFixed(2);
+
+
+    document
+    .getElementById("bestStreak")
+    .innerText =
+        bestStreak;
+
+
+    /*
+       문제별 결과 먼저 표시
+    */
+
+    showAnswerReview();
+
+
+    /*
+       Firebase에 점수 저장
+    */
+
+    await saveRecord();
+
+}
+
+
+/* =====================================================
+   문제별 결과 표시
+===================================================== */
+
+function showAnswerReview() {
+
+
+    const reviewList =
+        document
+        .getElementById(
+            "reviewList"
+        );
+
+
+    reviewList.innerHTML =
+        "";
+
+
+    answerHistory.forEach(
+
+        function(item) {
+
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+
+            if(item.correct) {
+
+                div.className =
+                    "reviewItem reviewCorrect";
+
+            }
+
+            else {
+
+                div.className =
+                    "reviewItem reviewWrong";
+
+            }
+
+
+            /*
+               빈칸별 답 표시
+            */
+
+            let answerHTML =
+                "";
+
+
+            for(
+                let i = 0;
+                i < item.correctAnswers.length;
+                i++
+            ) {
+
+
+                const myAnswer =
+                    item.userAnswers[i]
+                    || "(입력 없음)";
+
+
+                const correctAnswer =
+                    item.correctAnswers[i];
+
+
+                answerHTML +=
+
+                    `<div>
+
+                        <span class="answerLabel">
+                        빈칸 ${i + 1}
+                        </span>
+
+                        <br>
+
+                        내 답:
+                        ${escapeHTML(myAnswer)}
+
+                        <br>
+
+                        정답:
+                        <strong>
+                        ${escapeHTML(correctAnswer)}
+                        </strong>
+
+                    </div>`;
+
+            }
+
+
+            const resultText =
+                item.correct
+
+                ?
+
+                `<span class="correctText">
+                    ✅ 정답
+                </span>`
+
+                :
+
+                `<span class="wrongText">
+                    ❌ 오답
+                </span>`;
+
+
+            div.innerHTML =
+
+                `<strong>
+                    ${item.number}번
+                    ${item.phase}
+                </strong>
+
+                <br>
+
+                ${resultText}
+
+                <br>
+
+                ⏱️ 풀이 시간:
+                ${item.time}초
+
+                <br>
+
+                🏆 획득 점수:
+                ${item.earnedScore.toLocaleString()}점
+
+                <hr>
+
+                ${answerHTML}`;
+
+
+            reviewList.appendChild(
+                div
+            );
+
+        }
+
+    );
+
+}
+
+
+/* =====================================================
+   Firebase 기록 저장
+===================================================== */
+
+async function saveRecord() {
+
+
+    try {
+
+
+        await addDoc(
+
+            collection(
+                db,
+                "quizScores"
+            ),
+
+            {
+
+                name:
+                    playerName,
+
+                score:
+                    score,
+
+                correct:
+                    correctCount,
+
+                totalTime:
+                    Number(
+                        totalTime.toFixed(2)
+                    ),
+
+                bestStreak:
+                    bestStreak,
+
+                createdAt:
+                    Date.now()
+
+            }
+
+        );
+
+
+        await loadRanking();
+
+
+    }
+
+    catch(error) {
+
+
+        console.error(error);
+
+
+        document
+        .getElementById(
+            "rankingList"
+        )
+        .innerHTML =
+
+            `<div class="error">
+
+                기록 저장에 실패했습니다.
+
+                <br>
+
+                Firebase Firestore
+                설정을 확인해주세요.
+
+            </div>`;
+
+    }
+
+}
+
+
+/* =====================================================
+   TOP 15 불러오기
+===================================================== */
+
+async function loadRanking() {
+
+
+    try {
+
+
+        const scoresQuery =
+
+            query(
+
+                collection(
+                    db,
+                    "quizScores"
+                ),
+
+                orderBy(
+                    "score",
+                    "desc"
+                ),
+
+                limit(15)
+
+            );
+
+
+        const snapshot =
+            await getDocs(
+                scoresQuery
+            );
+
+
+        const records = [];
+
+
+        snapshot.forEach(
+
+            function(doc) {
+
+                records.push(
+                    doc.data()
+                );
+
+            }
+
+        );
+
+
+        showRanking(
+            records
+        );
+
+
+    }
+
+    catch(error) {
+
+
+        console.error(error);
+
+
+        document
+        .getElementById(
+            "rankingList"
+        )
+        .innerHTML =
+
+            `<div class="error">
+
+                TOP 15를
+                불러오지 못했습니다.
+
+            </div>`;
+
+    }
+
+}
+
+
+/* =====================================================
+   TOP 15 표시
+===================================================== */
+
+function showRanking(records) {
+
+
+    const rankingList =
+        document
+        .getElementById(
+            "rankingList"
+        );
+
+
+    rankingList.innerHTML =
+        "";
+
+
+    if(
+        records.length === 0
+    ) {
+
+        rankingList.innerHTML =
+            "<div class='loading'>아직 기록이 없습니다.</div>";
+
+        return;
+
+    }
+
+
+    records.forEach(
+
+        function(record, index) {
+
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+
+            div.className =
+                "rank";
+
+
+            if(
+
+                record.name ===
+                playerName
+
+                &&
+
+                record.score ===
+                score
+
+            ) {
+
+                div.classList.add(
+                    "myRank"
+                );
+
+            }
+
+
+            div.innerHTML =
+
+                `<span>
+
+                    ${index + 1}위&nbsp;&nbsp;
+
+                    ${escapeHTML(
+                        record.name
+                    )}
+
+                </span>
+
+                <strong>
+
+                    ${record.score
+                        .toLocaleString()
+                    }점
+
+                </strong>`;
+
+
+            rankingList.appendChild(
+                div
+            );
+
+        }
+
+    );
+
+}
+
+
+/* =====================================================
+   HTML 문자 안전 처리
+===================================================== */
+
+function escapeHTML(text) {
+
+    return String(text)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+</script>
+
+</body>
+</html>
