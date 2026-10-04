@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>감수분열 퀴즈</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #dff3ff, #f5e9ff);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #222;
+}
+
+.container {
+  width: 92%;
+  max-width: 650px;
+  background: white;
+  border-radius: 25px;
+  padding: 30px;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.15);
+}
+
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: block;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+input {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  font-size: 18px;
+  margin: 10px 0;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  background: #6c63ff;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.question-number {
+  color: #6c63ff;
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+
+.question {
+  font-size: 22px;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  word-break: keep-all;
+}
+
+.answer-box {
+  margin-bottom: 10px;
+}
+
+.result-box {
+  text-align: center;
+  background: #f7f7ff;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 15px 0;
+}
+
+.review {
+  margin-top: 20px;
+}
+
+.review-item {
+  background: #f8f8f8;
+  border-radius: 12px;
+  padding: 15px;
+  margin: 10px 0;
+}
+
+.correct {
+  color: #159447;
+  font-weight: bold;
+}
+
+.wrong {
+  color: #d93636;
+  font-weight: bold;
+}
+
+.ranking {
+  margin-top: 25px;
+}
+
+.rank-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- 시작 화면 -->
+  <div id="startScreen" class="screen active">
+    <h1>🧬 감수분열 퀴즈</h1>
+
+    <p>닉네임을 입력하세요.</p>
+
+    <input
+      id="nickname"
+      type="text"
+      maxlength="20"
+      placeholder="닉네임"
+    >
+
+    <button onclick="startGame()">게임 시작</button>
+  </div>
+
+
+  <!-- 퀴즈 화면 -->
+  <div id="quizScreen" class="screen">
+
+    <div class="info">
+      <span id="scoreDisplay">점수: 0</span>
+      <span id="timerDisplay">시간: 0.0초</span>
+    </div>
+
+    <div id="questionNumber" class="question-number"></div>
+
+    <div id="questionText" class="question"></div>
+
+    <div id="answerContainer"></div>
+
+    <button onclick="submitAnswer()">정답 제출</button>
+
+  </div>
+
+
+  <!-- 결과 화면 -->
+  <div id="resultScreen" class="screen">
+
+    <h1>🎉 결과</h1>
+
+    <div class="result-box">
+      <p id="finalScore"></p>
+      <p id="correctCount"></p>
+      <p id="totalTime"></p>
+      <p id="bestStreak"></p>
+    </div>
+
+    <div class="review">
+      <h2>📝 문제별 결과</h2>
+      <div id="reviewContainer"></div>
+    </div>
+
+    <div class="ranking">
+      <h2>🏆 TOP 15</h2>
+      <div id="rankingContainer">
+        불러오는 중...
+      </div>
+    </div>
+
+    <button onclick="location.reload()">다시 하기</button>
+
+  </div>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  serverTimestamp
+}
+from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+
+/* Firebase */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCe5NTMsC6NAA2LJ_CYWIiMT6vsVaAxUk",
+  authDomain: "ssb117-eb0c1.firebaseapp.com",
+  projectId: "ssb117-eb0c1",
+  storageBucket: "ssb117-eb0c1.firebasestorage.app",
+  messagingSenderId: "872109001831",
+  appId: "1:872109001831:web:ecf760e2cb7a860c2b98c2",
+  measurementId: "G-115T5T0QD8"
+};
+
+let db = null;
+
+try {
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+} catch (error) {
+  console.error(error);
+}
+
+
+/* 문제 */
+
+const questions = [
+
+  {
+    text: "1분열 전 ( )가 복제된다.",
+    answers: ["DNA"]
+  },
+
+  {
+    text: "2전기 ()이 사라지고, ( )가 결합하여 나타난다.",
+    answers: ["핵막", "상동염색체"]
+  },
+
+  {
+    text: "3중기 ( )가 ()에 배열한다.",
+    answers: ["결합한상동염색체", "가운데"]
+  },
+
+  {
+    text: "4후기 ()가 분리되고, 각 ()가 ()으로 이동한",
+    answers: ["상동염색체", "염색체", "양쪽끝"]
+  },
+
+  {
+    text: "5말기 ()이 나타나고, ()이 나누어진다",
+    answers: ["핵막", "세포질"]
+  },
+
+  {
+    text: "6.전기 ()에 ()로 이루어진 ()가 있고, ()이 사라진다.",
+    answers: ["각세포", "염색분체", "염색체", "핵막"]
+  },
+
+  {
+    text: "7.중기 ()가 ()에 배열한다",
+    answers: ["염색체", "가운데"]
+  },
+
+  {
+    text: "8.후기 ()의 ()가 분리되어 ()으로 이동한다",
+    answers: ["각염색체", "염색분체", "양쪽끝"]
+  },
+
+  {
+    text: "9.말기 및 세포질 분열 ()이 나누어지고, ()가 만들어진다",
+    answers: ["세포질", "딸세포네개"]
+  },
+
+  {
+    text: "10.생식세포 형성 ()는 () 또는 ()가 된다.",
+    answers: ["딸세포", "정자", "난자"]
+  }
+
+];
+
+
+/* 변수 */
+
+let gameQuestions = [];
+let currentIndex = 0;
+
+let score = 0;
+let streak = 0;
+let bestStreak = 0;
+
+let correctCount = 0;
+
+let questionStartTime = 0;
+let gameStartTime = 0;
+
+let timerInterval = null;
+
+let history = [];
+
+
+/* 공백 무시 */
+
+function normalizeAnswer(answer) {
+
+  return String(answer)
+    .replace(/\s+/g, "")
+    .toLowerCase()
+    .trim();
+
+}
+
+
+/* 랜덤 섞기 */
+
+function shuffle(array) {
+
+  const arr = [...array];
+
+  for (let i = arr.length - 1; i > 0; i--) {
+
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+
+  }
+
+  return arr;
+}
+
+
+/* 점수 계산 */
+
+function calculateScore(time, streak) {
+
+  let baseScore;
+  let bonusRate;
+
+  if (time <= 6) {
+
+    baseScore = 1000;
+    bonusRate = 0.25;
+
+  } else if (time <= 13) {
+
+    baseScore = 500;
+    bonusRate = 0.15;
+
+  } else if (time <= 20) {
+
+    baseScore = 300;
+    bonusRate = 0.05;
+
+  } else {
+
+    baseScore = 100;
+    bonusRate = 0.03;
+
+  }
+
+  return Math.round(
+    baseScore * Math.pow(1 + bonusRate, streak - 1)
+  );
+}
+
+
+/* 화면 전환 */
+
+function showScreen(id) {
+
+  document.querySelectorAll(".screen")
+    .forEach(screen => screen.classList.remove("active"));
+
+  document.getElementById(id)
+    .classList.add("active");
+
+}
+
+
+/* 게임 시작 */
+
+window.startGame = function() {
+
+  const nickname =
+    document.getElementById("nickname").value.trim();
+
+  if (!nickname) {
+
+    alert("닉네임을 입력하세요.");
+
+    return;
+  }
+
+  gameQuestions = shuffle(questions);
+
+  currentIndex = 0;
+
+  score = 0;
+  streak = 0;
+  bestStreak = 0;
+  correctCount = 0;
+
+  history = [];
+
+  gameStartTime = Date.now();
+
+  showScreen("quizScreen");
+
+  showQuestion();
+
+};
+
+
+/* 문제 표시 */
+
+function showQuestion() {
+
+  const q = gameQuestions[currentIndex];
+
+  document.getElementById("questionNumber").textContent =
+    `${currentIndex + 1} / ${gameQuestions.length}`;
+
+  document.getElementById("questionText").textContent =
+    q.text;
+
+  const container =
+    document.getElementById("answerContainer");
+
+  container.innerHTML = "";
+
+  q.answers.forEach((answer, index) => {
+
+    const input = document.createElement("input");
+
+    input.className = "answer-box";
+
+    input.placeholder =
+      `빈칸 ${index + 1}`;
+
+    input.id = `answer${index}`;
+
+    container.appendChild(input);
+
+  });
+
+  document.getElementById("scoreDisplay").textContent =
+    `점수: ${score}`;
+
+  questionStartTime = Date.now();
+
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+
+    const elapsed =
+      (Date.now() - questionStartTime) / 1000;
+
+    document.getElementById("timerDisplay").textContent =
+      `시간: ${elapsed.toFixed(1)}초`;
+
+  }, 100);
+
+  const firstInput =
+    document.getElementById("answer0");
+
+  if (firstInput) firstInput.focus();
+
+}
+
+
+/* 정답 제출 */
+
+window.submitAnswer = function() {
+
+  const q = gameQuestions[currentIndex];
+
+  const elapsed =
+    (Date.now() - questionStartTime) / 1000;
+
+  const userAnswers = [];
+
+  for (let i = 0; i < q.answers.length; i++) {
+
+    const input =
+      document.getElementById(`answer${i}`);
+
+    userAnswers.push(input ? input.value : "");
+
+  }
+
+  let isCorrect = true;
+
+  for (let i = 0; i < q.answers.length; i++) {
+
+    if (
+      normalizeAnswer(userAnswers[i]) !==
+      normalizeAnswer(q.answers[i])
+    ) {
+
+      isCorrect = false;
+
+      break;
+    }
+  }
+
+  let earnedScore = 0;
+
+  if (isCorrect) {
+
+    streak++;
+
+    if (streak > bestStreak) {
+      bestStreak = streak;
+    }
+
+    earnedScore =
+      calculateScore(elapsed, streak);
+
+    score += earnedScore;
+
+    correctCount++;
+
+  } else {
+
+    streak = 0;
+
+    earnedScore = 0;
+
+  }
+
+  history.push({
+
+    question: q.text,
+
+    userAnswers: userAnswers,
+
+    correctAnswers: q.answers,
+
+    time: elapsed,
+
+    score: earnedScore,
+
+    correct: isCorrect
+
+  });
+
+  currentIndex++;
+
+  if (currentIndex >= gameQuestions.length) {
+
+    finishGame();
+
+  } else {
+
+    showQuestion();
+
+  }
+
+};
+
+
+/* 게임 종료 */
+
+async function finishGame() {
+
+  clearInterval(timerInterval);
+
+  const totalTime =
+    (Date.now() - gameStartTime) / 1000;
+
+  showScreen("resultScreen");
+
+  document.getElementById("finalScore").textContent =
+    `최종 점수: ${score}점`;
+
+  document.getElementById("correctCount").textContent =
+    `정답: ${correctCount} / ${gameQuestions.length}`;
+
+  document.getElementById("totalTime").textContent =
+    `총 시간: ${totalTime.toFixed(1)}초`;
+
+  document.getElementById("bestStreak").textContent =
+    `최고 연속 정답: ${bestStreak}`;
+
+  showReview();
+
+  await saveScore(totalTime);
+
+  await loadRanking();
+
+}
+
+
+/* 문제별 결과 */
+
+function showReview() {
+
+  const container =
+    document.getElementById("reviewContainer");
+
+  container.innerHTML = "";
+
+  history.forEach((item, index) => {
+
+    const div =
+      document.createElement("div");
+
+    div.className = "review-item";
+
+    const resultClass =
+      item.correct ? "correct" : "wrong";
+
+    const resultText =
+      item.correct ? "정답" : "오답";
+
+    let answersHTML = "";
+
+    for (let i = 0; i < item.correctAnswers.length; i++) {
+
+      answersHTML += `
+        <div>
+          내 답: ${item.userAnswers[i] || "(입력 없음)"}
+        </div>
+        <div>
+          정답: ${item.correctAnswers[i]}
+        </div>
+      `;
+
+    }
+
+    div.innerHTML = `
+
+      <strong>${index + 1}. ${item.question}</strong>
+
+      <p class="${resultClass}">
+        ${resultText} · ${item.score}점
+      </p>
+
+      <p>
+        풀이 시간: ${item.time.toFixed(1)}초
+      </p>
+
+      ${answersHTML}
+
+    `;
+
+    container.appendChild(div);
+
+  });
+
+}
+
+
+/* Firebase 저장 */
+
+async function saveScore(totalTime) {
+
+  if (!db) return;
+
+  const nickname =
+    document.getElementById("nickname").value.trim();
+
+  try {
+
+    await addDoc(
+      collection(db, "quizScores"),
+      {
+
+        name: nickname,
+
+        score: score,
+
+        correct: correctCount,
+
+        totalTime: totalTime,
+
+        bestStreak: bestStreak,
+
+        createdAt: serverTimestamp()
+
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "점수 저장 실패:",
+      error
+    );
+
+  }
+
+}
+
+
+/* TOP 15 */
+
+async function loadRanking() {
+
+  const container =
+    document.getElementById("rankingContainer");
+
+  if (!db) {
+
+    container.textContent =
+      "랭킹을 불러올 수 없습니다.";
+
+    return;
+
+  }
+
+  try {
+
+    const rankingQuery =
+      query(
+        collection(db, "quizScores"),
+        orderBy("score", "desc"),
+        limit(15)
+      );
+
+    const snapshot =
+      await getDocs(rankingQuery);
+
+    container.innerHTML = "";
+
+    let rank = 1;
+
+    snapshot.forEach(doc => {
+
+      const data = doc.data();
+
+      const div =
+        document.createElement("div");
+
+      div.className = "rank-item";
+
+      div.innerHTML = `
+        <span>${rank}. ${data.name}</span>
+        <strong>${data.score}점</strong>
+      `;
+
+      container.appendChild(div);
+
+      rank++;
+
+    });
+
+    if (rank === 1) {
+
+      container.textContent =
+        "아직 기록이 없습니다.";
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "랭킹 불러오기 실패:",
+      error
+    );
+
+    container.textContent =
+      "랭킹을 불러오지 못했습니다.";
+
+  }
+
+}
+
+
+/* Enter 키 */
+
+document.addEventListener("keydown", event => {
+
+  if (
+    event.key === "Enter" &&
+    document.getElementById("quizScreen").classList.contains("active")
+  ) {
+
+    window.submitAnswer();
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>
